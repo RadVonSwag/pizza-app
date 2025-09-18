@@ -1,3 +1,5 @@
+import util from "util";
+
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -37,11 +39,9 @@ export const lambdaHandler = async (event, context) => {
 
   // Customize a pizza
   if (httpMethod === "POST" && path === "/customize") {
-    console.log("Customizing pizza");
     // Parse the JSON
     const pizza = JSON.parse(event.body || {});
-    console.log("Parsed body:", pizza);
-    console.log(`Toppings: ${pizza.toppings.meats}, ${pizza.toppings.vegetables}`);
+    console.log("Parsed body:", util.inspect(pizza, { depth: null }));
     
     // Make sure pizza is valid
     console.log("Validating pizza...");
@@ -55,12 +55,24 @@ export const lambdaHandler = async (event, context) => {
 
 
     // Calculate Price
-
+    let calculatedPrice = 0;
     // Caclulate Calories
+    let calculatedCalories = 0;
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "CUSTOMIZING PIZZA..." })
+      body: JSON.stringify({
+          size: "medium",
+          crust: "stuffed",
+          sauce: "regular",
+          cheese: "extra",
+          toppings: {
+            meats: ["pepperoni"],
+            vegetables: ["mushrooms", "olives"]
+          },
+          price: calculatedPrice,
+          calories: calculatedCalories
+      })
     };
   }
 
