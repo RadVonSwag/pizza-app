@@ -55,21 +55,19 @@ export const lambdaHandler = async (event, context) => {
 
 
     // Calculate Price
-    let calculatedPrice = 0;
+    let calculatedPrice = calculatePrice(pizza);
+
     // Caclulate Calories
-    let calculatedCalories = 0;
+    let calculatedCalories = calculateCalories(pizza);
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-          size: "medium",
-          crust: "stuffed",
-          sauce: "regular",
-          cheese: "extra",
-          toppings: {
-            meats: ["pepperoni"],
-            vegetables: ["mushrooms", "olives"]
-          },
+          size: pizza.size,
+          crust: pizza.crust,
+          sauce: pizza.sauce,
+          cheese: pizza.cheese,
+          toppings: pizza.toppings,
           price: calculatedPrice,
           calories: calculatedCalories
       })
@@ -118,3 +116,53 @@ export const lambdaHandler = async (event, context) => {
 
   return response;
 };
+
+function calculatePrice(pizza) {
+  let calculatedPrice = 0;
+  const priceDivisor = 11;
+  const pricePerTopping = 2;
+  const numFreeToppings = 1; // Customers get one free topping with any pizza
+  const sizeRadius = {
+    "small" : 5,
+    "medium" : 6,
+    "large" : 7,
+    "xlarge" : 8
+  };
+  let radius = sizeRadius[pizza.size];
+  let toppingsPrice = pricePerTopping * (
+    (pizza.toppings.meat?.length || 0) +
+    (pizza.toppings.vegetables?.length || 0) -
+    numFreeToppings
+  );
+
+  if (pizza.cheese === "extra") {
+    toppingsPrice = toppingsPrice + pricePerTopping;
+  }
+
+  calculatedPrice = (
+    (
+      (Math.PI * Math.pow(radius, 2)) / priceDivisor
+    ) + toppingsPrice
+  ).toFixed(2);
+
+  return calculatedPrice;
+}
+
+function calculateCalories(pizza) {
+  const sizeBaseCalories = {
+    "small" : 1200,
+    "medium" : 1600,
+    "large" : 2200,
+    "xlarge" : 2600
+  };
+
+  const meatCalories = 200;
+  const vegCalories = 25;
+  let numMeatToppings = pizza.toppings.meats?.length || 0;
+  let numVegToppings = pizza.toppings.vegetables?.length || 0;
+  let totalMeatCalories = meatCalories * numMeatToppings;
+  let totalVegCalories = vegCalories * numVegToppings;
+
+  let totalCalories = sizeBaseCalories[pizza.size] + totalMeatCalories + totalVegCalories;
+  return totalCalories;
+}
