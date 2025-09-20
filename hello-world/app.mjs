@@ -70,10 +70,17 @@ export const lambdaHandler = async (event, context) => {
   // Place an Order
   if (httpMethod === "POST" && path === "/order") {
     // parse the pizza and payment details
+    const pizza = JSON.parse(event.body);
+    const payment = pizza.payment;
+
     // validate pizza and payment details
+
     // create an new orderId for the order.
+
     // process payment (body has payment details maybe?)
+
     // store order details dyanmoDB local docker container?
+    
     // return an order with orderId and status
 
     return {
