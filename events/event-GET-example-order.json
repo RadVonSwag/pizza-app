@@ -1,7 +1,7 @@
 {
-  "body": "{\"message\": \"hello world-event.json\"}",
+  "body": "{\"message\": \"give me the order details now!!! >:(\"}",
   "resource": "/{proxy+}",
-  "path": "/customize_example",
+  "path": "/example_order",
   "httpMethod": "GET",
   "isBase64Encoded": false,
   "queryStringParameters": {

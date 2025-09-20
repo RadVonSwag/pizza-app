@@ -1,4 +1,5 @@
 import util from "util";
+import crypto from "crypto";
 
 /**
  *
@@ -42,17 +43,9 @@ export const lambdaHandler = async (event, context) => {
     // Parse the JSON
     const pizza = JSON.parse(event.body || {});
     console.log("Parsed body:", util.inspect(pizza, { depth: null }));
-    
-    // Make sure pizza is valid
-    console.log("Validating pizza...");
-    if ((Object.keys(pizza).length === 0) || !pizza.size || !pizza.sauce || !pizza.cheese) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: "ERROR_400_BAD_REQUEST: Invalid pizza provided." })
-      };
-    }
-    console.log("Pizza validated successfully! Hey... You've got great taste!");
 
+    // Make sure pizza is valid
+    validatePizza(pizza);
 
     // Calculate Price
     let calculatedPrice = calculatePrice(pizza);
@@ -63,19 +56,26 @@ export const lambdaHandler = async (event, context) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-          size: pizza.size,
-          crust: pizza.crust,
-          sauce: pizza.sauce,
-          cheese: pizza.cheese,
-          toppings: pizza.toppings,
-          price: calculatedPrice,
-          calories: calculatedCalories
+        size: pizza.size,
+        crust: pizza.crust,
+        sauce: pizza.sauce,
+        cheese: pizza.cheese,
+        toppings: pizza.toppings,
+        price: calculatedPrice,
+        calories: calculatedCalories
       })
     };
   }
 
   // Place an Order
   if (httpMethod === "POST" && path === "/order") {
+    // parse the pizza and payment details
+    // validate pizza and payment details
+    // create an new orderId for the order.
+    // process payment (body has payment details maybe?)
+    // store order details dyanmoDB local docker container?
+    // return an order with orderId and status
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "PLACING ORDER..." })
@@ -90,19 +90,31 @@ export const lambdaHandler = async (event, context) => {
     };
   }
 
-  // Get an example of a customized pizza (for dev purposes)
-  if (httpMethod === "GET" && path === "/customize_example") {
+  // Get an example of a customized pizza ready to order (for dev purposes)
+  if (httpMethod === "GET" && path === "/example_order") {
     return {
       statusCode: 200,
       body: JSON.stringify({
-          size: "medium",
-          crust: "stuffed",
-          sauce: "regular",
-          cheese: "extra",
-          toppings: {
-            meats: ["pepperoni"],
-            vegetables: ["mushrooms", "olives"]
-          }
+        size: "medium",
+        crust: "stuffed",
+        sauce: "regular",
+        cheese: "extra",
+        toppings: {
+          meats: ["pepperoni"],
+          vegetables: ["mushrooms", "olives"]
+        },
+        price: 14.61,
+        calories: 1850,
+        payment: {
+          token: "pizza_payment_token_" + crypto.randomUUID(),
+          amount: 14.61,
+          currency: "USD"
+        },
+        customer: {
+          name: "Giorno",
+          customerId: "customer_" + crypto.randomUUID(),
+          email: "giorno@email.com"
+        }
       })
     };
   }
@@ -117,16 +129,27 @@ export const lambdaHandler = async (event, context) => {
   return response;
 };
 
+function validatePizza(pizza) {
+  console.log("Validating pizza...");
+  if ((Object.keys(pizza).length === 0) || !pizza.size || !pizza.sauce || !pizza.cheese) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: "ERROR_400_BAD_REQUEST: Invalid pizza provided." })
+    };
+  }
+  console.log("Pizza validated successfully! Hey... You've got great taste!");
+}
+
 function calculatePrice(pizza) {
   let calculatedPrice = 0;
   const priceDivisor = 11;
   const pricePerTopping = 2;
   const numFreeToppings = 1; // Customers get one free topping with any pizza
   const sizeRadius = {
-    "small" : 5,
-    "medium" : 6,
-    "large" : 7,
-    "xlarge" : 8
+    "small": 5,
+    "medium": 6,
+    "large": 7,
+    "xlarge": 8
   };
   let radius = sizeRadius[pizza.size];
   let toppingsPrice = pricePerTopping * (
@@ -150,10 +173,10 @@ function calculatePrice(pizza) {
 
 function calculateCalories(pizza) {
   const sizeBaseCalories = {
-    "small" : 1200,
-    "medium" : 1600,
-    "large" : 2200,
-    "xlarge" : 2600
+    "small": 1200,
+    "medium": 1600,
+    "large": 2200,
+    "xlarge": 2600
   };
 
   const meatCalories = 200;

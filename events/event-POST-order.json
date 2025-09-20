@@ -1,5 +1,5 @@
 {
-  "body": "{\"message\": \"hello world-event.json\"}",
+  "body": "{\"size\":\"medium\",\"crust\":\"stuffed\",\"sauce\":\"regular\",\"cheese\":\"extra\",\"toppings\":{\"meats\":[\"pepperoni\"],\"vegetables\":[\"mushrooms\",\"olives\"]},\"price\":14.61,\"calories\":1850,\"payment\":{\"token\":\"pizza_payment_token_0171a0e7-7967-4e63-a2d5-84832a9f6eff\",\"amount\":14.61,\"currency\":\"USD\"},\"customer\":{\"name\":\"Giorno\",\"customerId\":\"customer_5279c8f3-f6b2-4921-9beb-caeebe1011ce\",\"email\":\"giorno@email.com\"}}",
   "resource": "/{proxy+}",
   "path": "/order",
   "httpMethod": "POST",
