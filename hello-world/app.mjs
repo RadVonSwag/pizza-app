@@ -1,5 +1,6 @@
 import util from "util";
 import crypto from "crypto";
+import AWS from "aws-sdk";
 
 /**
  *
@@ -89,7 +90,7 @@ export const lambdaHandler = async (event, context) => {
       };
     }
     // validate the token (36 character string)
-    if (!(36 = payment.token.substring(21).length)) {
+    if (payment.token.substring(20).length !== 36) {
       return {
         statusCode: 400,
         body: JSON.stringify({ message: "ERROR_400_BAD_REQUEST: Invalid payment token." })
@@ -104,19 +105,42 @@ export const lambdaHandler = async (event, context) => {
     }
 
     // create an new orderId for the order.
-    let orderId = "order_" + crypto.randomUUID;
+    let orderId = "order_" + crypto.randomUUID();
+    let status = "confirmed";
 
     // store order details dyanmoDB local docker container?
-    
+    const ddb = new AWS.DynamoDB.DocumentClient({
+      endpoint: "http://host.docker.internal:8000",
+      region: "us-east-1"
+    });
+
+    const order = {
+      orderId,
+      status,
+      paidAmount: payment.amount,
+      items: pizza
+    }
+
+    let params = {
+      TableName: "Orders",
+      Item: order
+    }
+
+    ddb.put(params, function (err, data) {
+      if (err) {
+        console.error("ERROR_500_INTERNAL: Error upserting order to DB.");
+      } else {
+        console.log("Successfully upserted order to DB.");
+      }
+    });
+
     // return an order with orderId and status
-    let status = "confirmed";
+
 
     return {
       statusCode: 200,
       body: JSON.stringify({ 
-        orderId: orderId,
-        status: status,
-        paidAmount: payment.amount,
+        order: order,
         message: "Payment processed successfully and order placed." })
     };
   }
