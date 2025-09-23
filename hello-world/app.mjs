@@ -19,7 +19,9 @@ export const lambdaHandler = async (event, context) => {
 
   console.log(`httpMethod: ${httpMethod}, path: ${path}`);
 
-  // View the Menu
+  /*
+  * View the Menu
+  */
   if (httpMethod === "GET" && path === "/menu") {
     return {
       statusCode: 200,
@@ -38,7 +40,9 @@ export const lambdaHandler = async (event, context) => {
     };
   }
 
-  // Customize a pizza
+  /*
+  * Customize a Pizza
+  */
   if (httpMethod === "POST" && path === "/customize") {
     // Parse the JSON
     const pizza = JSON.parse(event.body || {});
@@ -67,25 +71,53 @@ export const lambdaHandler = async (event, context) => {
     };
   }
 
-  // Place an Order
+  /*
+  * Place an Order
+  */
   if (httpMethod === "POST" && path === "/order") {
     // parse the pizza and payment details
     const pizza = JSON.parse(event.body);
     const payment = pizza.payment;
 
-    // validate pizza and payment details
+    // validate pizza
+    validatePizza(pizza);
+    // validate that payment has each field populated
+    if ((Object.keys(payment).length === 0) || !payment.token || !payment.amount || !payment.currency) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "ERROR_400_BAD_REQUEST: Invalid payment information." })
+      };
+    }
+    // validate the token (36 character string)
+    if (!(36 = payment.token.substring(21).length)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "ERROR_400_BAD_REQUEST: Invalid payment token." })
+      };
+    }
+    // validate price is positive
+    if (payment.amount <= 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "ERROR_400_BAD_REQUEST: Invalid payment amount." })
+      };
+    }
 
     // create an new orderId for the order.
-
-    // process payment (body has payment details maybe?)
+    let orderId = "order_" + crypto.randomUUID;
 
     // store order details dyanmoDB local docker container?
     
     // return an order with orderId and status
+    let status = "confirmed";
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "PLACING ORDER..." })
+      body: JSON.stringify({ 
+        orderId: orderId,
+        status: status,
+        paidAmount: payment.amount,
+        message: "Payment processed successfully and order placed." })
     };
   }
 
@@ -97,7 +129,9 @@ export const lambdaHandler = async (event, context) => {
     };
   }
 
-  // Get an example of a customized pizza ready to order (for dev purposes)
+  /*
+  * Get an example of a customized pizza ready to order (for dev purposes)
+  */
   if (httpMethod === "GET" && path === "/example_order") {
     return {
       statusCode: 200,
