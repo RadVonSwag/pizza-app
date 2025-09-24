@@ -1,11 +1,14 @@
+version: '3'
 services:
- dynamodb-local:
-   command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
-   image: "amazon/dynamodb-local:latest"
-   container_name: dynamodb-local
-   network_mode: "host"
-  #  ports:
-  #    - "8000:8000"
-  #  volumes:
-  #    - "./docker/dynamodb:/home/dynamodblocal/data"
-  #  working_dir: /home/dynamodblocal
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb-local
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    networks:
+      - sam-local
+    ports:
+      - "8000:8000"
+
+networks:
+  sam-local:
+    external: true

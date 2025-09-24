@@ -105,48 +105,94 @@ export const lambdaHandler = async (event, context) => {
     }
 
     // create an new orderId for the order.
-    let orderId = "order_" + crypto.randomUUID();
+    let orderId = crypto.randomUUID();
     let status = "confirmed";
 
-    // store order details dyanmoDB local docker container?
-    const ddb = new AWS.DynamoDB.DocumentClient({
-      endpoint: "http://host.docker.internal:8000",
-      region: "us-east-1"
-    });
-
     const order = {
-      orderId,
-      status,
+      orderId: orderId,
+      status: status,
       paidAmount: payment.amount,
       items: pizza
     }
 
-    let params = {
+    let orderParams = {
       TableName: "Orders",
       Item: order
     }
 
-    ddb.put(params, function (err, data) {
-      if (err) {
-        console.error("ERROR_500_INTERNAL: Error upserting order to DB.");
-      } else {
-        console.log("Successfully upserted order to DB.");
-      }
+    // store order details dyanmoDB local docker container?
+    const ddb = new AWS.DynamoDB.DocumentClient({
+      endpoint: "http://dynamodb-local:8000",
+      region: "us-east-1",
+      accessKeyId: "dummy",
+      secretAccessKey: "dummy"
+    });
+    const db = new AWS.DynamoDB({
+      endpoint: "http://dynamodb-local:8000",
+      region: "us-east-1",
+      accessKeyId: "dummy",
+      secretAccessKey: "dummy"
     });
 
-    // return an order with orderId and status
+    // Check if Orders table exists, create one if DNE.
+    async function tableExists() {
+      const tableName = "Orders";
+      try {
+        await db.describeTable({ TableName: tableName }).promise();
+        console.log(`${tableName} Table found!`);
+      } catch (err) {
+        if (err.code === "ResourceNotFoundException") {
+          console.log(`${tableName} table does not exist. Creating New ${tableName} Table`);
+          const dbParams = {
+            TableName: tableName,
+            AttributeDefinitions: [
+              { AttributeName: "orderId", AttributeType: "S" }
+            ],
+            KeySchema: [
+              { AttributeName: "orderId", KeyType: "HASH" }
+            ],
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 5,
+              WriteCapacityUnits: 5
+            }
+          }
+          await db.createTable(dbParams).promise();
+          console.log(`Successfully created ${tableName} table.`);
+          return;
+        } else {
+          throw err;
+        }
+      }
+    }
 
+    await tableExists();
+
+    // Save order to db
+    try {
+      console.log("Saving order to DB...");
+      await ddb.put(orderParams).promise();
+      console.log("Successfully upserted order to DB.");
+    } catch (err) {
+      console.error("ERROR_500_INTERNAL: Error upserting order to DB.", err);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: "ERROR_500_INTERNAL: Failed to write order." })
+      };
+    }
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         order: order,
-        message: "Payment processed successfully and order placed." })
+        message: "Payment processed successfully and order placed."
+      })
     };
   }
 
   // View an order
-  if (httpMethod === "GET" && path === "order/id") {
+  if (httpMethod === "GET" && path.startsWith("/order/")) {
+    const orderId = path.split("/")[2];
+    console.log("OrderId:", orderId);
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "RETRIEVING ORDER DETAILS..." })
