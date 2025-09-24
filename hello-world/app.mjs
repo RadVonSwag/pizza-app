@@ -127,16 +127,16 @@ export const lambdaHandler = async (event, context) => {
       accessKeyId: "dummy",
       secretAccessKey: "dummy"
     });
-    const db = new AWS.DynamoDB({
-      endpoint: "http://dynamodb-local:8000",
-      region: "us-east-1",
-      accessKeyId: "dummy",
-      secretAccessKey: "dummy"
-    });
 
     // Check if Orders table exists, create one if DNE.
     async function tableExists() {
       const tableName = "Orders";
+      const db = new AWS.DynamoDB({
+        endpoint: "http://dynamodb-local:8000",
+        region: "us-east-1",
+        accessKeyId: "dummy",
+        secretAccessKey: "dummy"
+      });
       try {
         await db.describeTable({ TableName: tableName }).promise();
         console.log(`${tableName} Table found!`);
@@ -193,9 +193,41 @@ export const lambdaHandler = async (event, context) => {
   if (httpMethod === "GET" && path.startsWith("/order/")) {
     const orderId = path.split("/")[2];
     console.log("OrderId:", orderId);
+    const ddb = new AWS.DynamoDB.DocumentClient({
+      endpoint: "http://dynamodb-local:8000",
+      region: "us-east-1",
+      accessKeyId: "dummy",
+      secretAccessKey: "dummy"
+    });
+
+    const params = {
+      TableName: "Orders",
+      Key: {
+        orderId: orderId
+      }
+    }
+
+    let order;
+
+    console.log("Retrieving order from DB...");
+    try {
+      const result = await ddb.get(params).promise();
+      if (result.Item) {
+        console.log("Retrieved order:", result.Item);
+        order = result.Item;
+      } else {
+        console.log("Order not found");
+      }
+    } catch (err) {
+      console.log("Error retrieving order:", err);
+    }
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "RETRIEVING ORDER DETAILS..." })
+      body: JSON.stringify({
+        message: "Retrieved Order Details Successfully",
+        order: order
+      })
     };
   }
 

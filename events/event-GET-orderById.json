@@ -1,7 +1,7 @@
 {
   "body": "{\"message\": \"hello world-event.json\"}",
   "resource": "/{proxy+}",
-  "path": "/order/123",
+  "path": "/order/2ee5110f-f50a-493d-a284-1813b80c48a8",
   "httpMethod": "GET",
   "isBase64Encoded": false,
   "queryStringParameters": {
