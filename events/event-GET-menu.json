@@ -1,5 +1,5 @@
 {
-  "body": "{\"message\": \"hello world-event.json\"}",
+  "body": "{\"message\": \"Give me the MENU!\"}",
   "resource": "/{proxy+}",
   "path": "/menu",
   "httpMethod": "GET",

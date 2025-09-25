@@ -120,7 +120,7 @@ export const lambdaHandler = async (event, context) => {
       Item: order
     }
 
-    // store order details dyanmoDB local docker container?
+    // store order details dyanmoDB local docker container
     const ddb = new AWS.DynamoDB.DocumentClient({
       endpoint: "http://dynamodb-local:8000",
       region: "us-east-1",
@@ -302,6 +302,10 @@ function calculatePrice(pizza) {
   );
 
   if (pizza.cheese === "extra") {
+    toppingsPrice = toppingsPrice + pricePerTopping;
+  }
+
+  if (pizza.crust === "stuffed") {
     toppingsPrice = toppingsPrice + pricePerTopping;
   }
 
